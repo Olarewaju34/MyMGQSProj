@@ -14,6 +14,6 @@ namespace SimpleEmployeeApp.Services
         void PrintListView(Employee employee);
         void PrintDetailView(Employee employee);
         void ChangePassword(string code, string oldPassword, string newPassword, string confirmPassword);
-        void AddAdminRecord();
+        void SeedData();
     }
 }

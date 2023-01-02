@@ -10,16 +10,14 @@ namespace SimpleEmployeeApp.Menus
     public class Menu
     {
         private static IEmployeeService employeeService;
-        private static EmployeeDto employeeDto;
+        private static EmployeeDto employeeDto; // a field injection
         private static UpdateEmployeeDto updateEmployeeDto;
-
-        public Menu()
+        public Menu() //is the best form of injection to a class
         {
+            updateEmployeeDto = new UpdateEmployeeDto();
             employeeService = new EmployeeService();
             employeeDto = new EmployeeDto();
-            updateEmployeeDto = new UpdateEmployeeDto();
         }
-
         public void MyMenu()
         {
             var flag = true;
@@ -50,15 +48,15 @@ namespace SimpleEmployeeApp.Menus
                             {
                                 AdminMenu();
                             }
+                            else if (employee.Role == Role.SubAdmin)
+                            {
+                                SubAdminMenu();
+                            }
                             else
                             {
                                 StaffMenu(employee);
                             }
                         }
-
-                        break;
-                    case "#":
-                        employeeService.AddAdminRecord();
                         break;
                     case "0":
                         flag = false;
@@ -70,7 +68,6 @@ namespace SimpleEmployeeApp.Menus
                 }
             }
         }
-
         public void AdminMenu()
         {
             var flag = true;
@@ -124,6 +121,51 @@ namespace SimpleEmployeeApp.Menus
             }
         }
 
+       public void SubAdminMenu()
+       {
+           var flag = true;
+
+            while (flag)
+            {
+                PrintSubAdminMenu();
+                Console.Write("\nPlease enter your option: ");
+                string option = Console.ReadLine();
+
+                switch (option)
+                {
+                    case "1":
+                        Console.WriteLine("");
+                        employeeService.Create(employeeDto);
+                        Console.WriteLine("");
+                        break;
+                    case "2":
+                        Console.WriteLine("");
+                        employeeService.GetAll();
+                        Console.WriteLine("");
+                        break;
+                    case "3":
+                        Console.WriteLine("");
+                        Console.Write("Enter the id of employee to view: ");
+                        int viewId = int.Parse(Console.ReadLine());
+                        employeeService.GetAnEmployee(viewId);
+                        Console.WriteLine("");
+                        break;
+                    case "4":
+                        Console.WriteLine("");
+                        Console.Write("Enter employee Id to update: ");
+                        int id = int.Parse(Console.ReadLine());
+                        employeeService.Update(id, updateEmployeeDto);
+                        Console.WriteLine("");
+                        break;
+                    case "0":
+                        flag = false;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid input!");
+                        break;
+                }
+            }
+       }
         public void StaffMenu(Employee employee)
         {
             var flag = true;
@@ -153,7 +195,6 @@ namespace SimpleEmployeeApp.Menus
                         var oldPassword = Console.ReadLine();
                         Console.Write("Enter your new password: ");
                         var newPassword = Console.ReadLine();
-                        Console.Write("Enter confirmation password: ");
                         var confirmPassword = Console.ReadLine();
                         employeeService.ChangePassword(employee.Code, oldPassword, newPassword, confirmPassword);
                         Console.WriteLine("");
@@ -167,17 +208,12 @@ namespace SimpleEmployeeApp.Menus
                 }
             }
         }
-
         public void PrintMenu()
         {
-            if(new FileInfo(Constants.fullPath).Length == 0)
-            {
-                Console.WriteLine("Enter # to seed admin data");
-            }
-            Console.WriteLine("Enter 1 to login.");
-            Console.WriteLine("Enter 0 to exit.");
+            employeeService.SeedData();
+            Console.WriteLine("Enter 1 to login");
+            Console.WriteLine("Enter 0 to exit");
         }
-
         public void PrintAdminMenu()
         {
             Console.WriteLine("Enter 1 to add new Employee.");
@@ -187,7 +223,14 @@ namespace SimpleEmployeeApp.Menus
             Console.WriteLine("Enter 5 to delete an employee.");
             Console.WriteLine("Enter 0 to go back to main menu.");
         }
-
+        public void PrintSubAdminMenu()
+        {
+            Console.WriteLine("Enter 1 to add new Employee.");
+            Console.WriteLine("Enter 2 to view all employees.");
+            Console.WriteLine("Enter 3 to view an employee.");
+            Console.WriteLine("Enter 4 to update an employee.");
+            Console.WriteLine("Enter 0 to go back to main menu.");
+        }
         public void PrintStaffMenu()
         {
             Console.WriteLine("Enter 1 to view your details.");

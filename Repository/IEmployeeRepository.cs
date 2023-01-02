@@ -1,15 +1,18 @@
 using SimpleEmployeeApp.Entities;
-using System.Collections.Generic;
 
 namespace SimpleEmployeeApp.Repository
 {
-    public interface IEmployeeRepository
+     public interface IEmployeeRepository
     {
-        Employee GetByIdOrCode(int id, string code);
         Employee GetById(int id);
         Employee GetByCode(string code);
         List<Employee> GetAll();
-        void WriteToFile(Employee employee);
-        void RefreshFile();
+        bool CreateRecord(Employee employee);
+        bool Update(Employee employee);
+        bool Delete(int id);
+        int EmployeeCount();
     }
 }
+
+
+

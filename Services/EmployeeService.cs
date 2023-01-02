@@ -9,16 +9,14 @@ namespace SimpleEmployeeApp.Services
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly IEmployeeRepository employeeRepository;
-
+        private static IEmployeeRepository _employeeRepository;
         public EmployeeService()
         {
-            employeeRepository = new EmployeeRepository();
+            _employeeRepository = new EmployeeRepository();
         }
-
         public void Create(EmployeeDto request)
         {
-            var employees = employeeRepository.GetAll();
+            var employees = _employeeRepository.GetAll();
 
             int id = (employees.Count != 0) ? employees[employees.Count - 1].Id + 1 : 1;
             string code = Helper.GenerateCode(id);
@@ -40,7 +38,7 @@ namespace SimpleEmployeeApp.Services
             request.Phone = Console.ReadLine();
             request.Password = request.Phone;
 
-            int role = Helper.SelectEnum("Enter employee role: \nEnter 1 for Admin\nEnter 2 for Security\nEnter 3 for Cleaner\nEnter 4 for Manager: ", 1, 4);
+            int role = Helper.SelectEnum("Enter employee role: \nEnter 1 for Admin\nEnter 2 for SubAdmin\nEnter 3 for Security\nEnter 4 for Cleaner\nEnter 5 for Manager: ", 1, 5);
             request.Role = (Role)role;
 
             int gender = Helper.SelectEnum("Enter employee gender:\nEnter 1 for Male\nEnter 2 for Female\nEnter 3 for RatherNotSay: ", 1, 3);
@@ -61,12 +59,12 @@ namespace SimpleEmployeeApp.Services
                 DateJoined = dateJoined
             };
 
-            var findEmployee = employeeRepository.GetByIdOrCode(employee.Id, employee.Code);
+            var findEmployee = _employeeRepository.GetByCode(employee.Code);
 
             if (findEmployee == null)
             {
-                employees.Add(employee);
-                employeeRepository.WriteToFile(employee);
+                // employees.Add(employee);
+                _employeeRepository.CreateRecord(employee);
                 Console.WriteLine($"New employee with code \"{employee.Code}\" created successfully!");
             }
             else
@@ -77,7 +75,7 @@ namespace SimpleEmployeeApp.Services
 
         public void Update(int id, UpdateEmployeeDto updateEmployeeDto)
         {
-            var employee = employeeRepository.GetById(id);
+            var employee = _employeeRepository.GetById(id);
 
             Console.Write("Enter employee firstname: ");
             updateEmployeeDto.FirstName = Console.ReadLine();
@@ -94,7 +92,7 @@ namespace SimpleEmployeeApp.Services
             Console.Write("Enter employee email: ");
             updateEmployeeDto.Email = Console.ReadLine();
 
-            int newRole = Helper.SelectEnum("Enter employee role: \nEnter 1 for Admin\nEnter 2 for Security\nEnter 3 for Cleaner\nEnter 4 for Manager: ", 1, 4);
+            int newRole = Helper.SelectEnum("Enter employee role: \nEnter 1 for Admin\nEnter 2 for SubAdmin\nEnter 3 for Security\nEnter 4 for Cleaner\nEnter 5 for Manager: ", 1, 5);
             updateEmployeeDto.Role = (Role)newRole;
 
             int newGender = Helper.SelectEnum("Enter employee gender: \nEnter 1 for Male\nEnter 2 for Female\nEnter 3for RatherNotSay: ", 1, 3);
@@ -110,7 +108,7 @@ namespace SimpleEmployeeApp.Services
                 employee.Phone = updateEmployeeDto.Phone;
                 employee.Email = updateEmployeeDto.Email;
 
-                employeeRepository.RefreshFile();
+                _employeeRepository.Update(employee);
 
                 Console.WriteLine($"Employee record with code \"{employee.Code}\" is successfully updated!");
             }
@@ -122,7 +120,7 @@ namespace SimpleEmployeeApp.Services
 
         public void Update(string code, UpdateEmployeeDto updateEmployeeDto)
         {
-            var employee = employeeRepository.GetByCode(code);
+            var employee = _employeeRepository.GetByCode(code);
 
             Console.Write("Enter employee firstname: ");
             updateEmployeeDto.FirstName = Console.ReadLine();
@@ -147,7 +145,7 @@ namespace SimpleEmployeeApp.Services
                 employee.Phone = updateEmployeeDto.Phone;
                 employee.Email = updateEmployeeDto.Email;
 
-                employeeRepository.RefreshFile();
+                _employeeRepository.Update(employee);
 
                 Console.WriteLine("Record updated successfully!");
             }
@@ -161,8 +159,8 @@ namespace SimpleEmployeeApp.Services
         {
             try
             {
-                var employee = employeeRepository.GetById(id);
-                var employees = employeeRepository.GetAll();
+                var employee = _employeeRepository.GetById(id);
+                var employees = _employeeRepository.GetAll();
 
                 if (employee == null)
                 {
@@ -176,7 +174,8 @@ namespace SimpleEmployeeApp.Services
                 else
                 {
                     employees.Remove(employee);
-                    employeeRepository.RefreshFile();
+                    _employeeRepository.Delete(id);
+
                     Console.WriteLine($"Employee with the id: {id} successfully deleted.");
                 }
             }
@@ -188,17 +187,17 @@ namespace SimpleEmployeeApp.Services
 
         public void PrintListView(Employee employee)
         {
-            Console.WriteLine($"Employee Code: {employee.Code}\tFullname: {employee.LastName} {employee.FirstName} {employee.MiddleName}\tEmail: {employee.Email}\tGender: {employee.Gender}\tRole: {employee.Role}");
+            Console.WriteLine($"Employee Code: {employee.Code}\tFullname: {employee.LastName}, {employee.FirstName} {employee.MiddleName}\tEmail: {employee.Email}\tGender: {employee.Gender}\tRole: {employee.Role}");
         }
 
         public void PrintDetailView(Employee employee)
         {
-            Console.WriteLine($"Code: {employee.Code}\nFullname: {employee.LastName} {employee.FirstName} {employee.MiddleName}\nPhone: {employee.Phone}\nEmail: {employee.Email}\nRole: {employee.Role}\nGender: {employee.Gender}\nDate Joined: {employee.DateJoined}");
+            Console.WriteLine($"Code: {employee.Code}\nFullname: {employee.LastName}, {employee.FirstName} {employee.MiddleName}\nPhone: {employee.Phone}\nEmail: {employee.Email}\nRole: {employee.Role}\nGender: {employee.Gender}\nDate Joined: {employee.DateJoined}");
         }
 
         public void GetAll()
         {
-            var employees = employeeRepository.GetAll();
+            var employees = _employeeRepository.GetAll();
 
             foreach (var employee in employees)
             {
@@ -208,9 +207,9 @@ namespace SimpleEmployeeApp.Services
 
         public void GetAnEmployee(int id)
         {
-            var employee = employeeRepository.GetById(id);
+            var employee = _employeeRepository.GetById(id);
 
-            if (employee != null)
+            if(employee != null)
             {
                 PrintDetailView(employee);
             }
@@ -222,34 +221,33 @@ namespace SimpleEmployeeApp.Services
 
         public void ChangePassword(string code, string oldPassword, string newPassword, string confirmPassword)
         {
-            var employee = employeeRepository.GetByCode(code);
+            var employee = _employeeRepository.GetByCode(code);
 
             if (employee == null)
             {
-                Console.WriteLine($"Employee with the code: {code} not found");
-                return;
+               Console.WriteLine($"Employee with the code: {code} not found");
+               return;
             }
 
             if (employee.Password != oldPassword)
             {
-                Console.WriteLine("Your current password is incorrect!");
-                return;
+               Console.WriteLine("Your current password is incorrect!");
+               return;
             }
 
             if (newPassword != confirmPassword)
             {
-                Console.WriteLine("Password mismatch!");
-                return;
+               Console.WriteLine("Password mismatch!");
+               return;
             }
 
             employee.Password = newPassword;
-            employeeRepository.RefreshFile();
             Console.WriteLine("You successfully changed your password!");
         }
 
         public Employee Login(string code, string password)
         {
-            var employee = employeeRepository.GetByCode(code);
+            var employee = _employeeRepository.GetByCode(code);
 
             if (employee != null && employee.Password == password)
             {
@@ -258,23 +256,28 @@ namespace SimpleEmployeeApp.Services
 
             return null;
         }
-
-        public void AddAdminRecord()
+        public void SeedData()
         {
-            var e = new Employee()
+            var employees = _employeeRepository.GetAll();
+
+            if (employees.Count() == 0)
             {
-                Id = 1,
-                Code = "EMP-0001",
-                FirstName = "Admin",
-                LastName = "Boss",
-                Email = "admin@admin.com",
-                Password = "password",
-                Phone = "08099889988",
-                Gender = Gender.Male,
-                Role = Role.Admin,
-                DateJoined = DateTime.Now
-            };
-            employeeRepository.WriteToFile(e);
+                Employee employeeData = new()
+                {
+                    Id = 1,
+                    Code = Helper.GenerateCode(1),
+                    FirstName = "Admin",
+                    LastName = "Boss",
+                    MiddleName = "Man",
+                    Email = "admin@bossman.com",
+                    Password = "password",
+                    Phone = "08012345678",
+                    Gender = Gender.Male,
+                    Role = Role.Admin,
+                    DateJoined = DateTime.Now
+                };
+                _employeeRepository.CreateRecord(employeeData);
+            }
         }
     }
 }

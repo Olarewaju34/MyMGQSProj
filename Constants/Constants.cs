@@ -2,8 +2,8 @@
 {
     public class Constants
     {
-        public const string dir = @"C:\Users\admin\Desktop\employeeRecord";
-        public const string filename = "employees.txt";
-        public static string fullPath = dir+"\\"+filename;
+        public const string dir = @"root@localhost:3306";
+        // public const string filename = "employees.txt";
+        // public static string fullPath = dir+"\\"+filename;
     }
 }
