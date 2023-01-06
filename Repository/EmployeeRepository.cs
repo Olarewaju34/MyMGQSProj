@@ -8,49 +8,48 @@ namespace SimpleEmployeeApp.Repository
     public class EmployeeRepository : IEmployeeRepository
     {
 
-        private string connectionString =@"server=localhost;user=root;database=employeeDb;port=3306;password=Olarewaju112$";
+        private string connectionString = @"server=localhost;user=root;database=employeeDb;port=3306;password=Olarewaju112$";
         public MySqlConnection conn;
         public EmployeeRepository()
         {
             conn = new MySqlConnection();
         }
-      public List<Employee> GetAll()
+        public List<Employee> GetAll()
         {
-            conn = new(connectionString);
             List<Employee> employees = new List<Employee>();
-
-            try 
+            using (conn = new(connectionString))
             {
-                conn.Open();
-
-                // SQL Query to execute
-                // selecting only first 10 rows for demo
-                string sql = "SELECT * FROM employees;";
-                MySqlCommand cmd = new MySqlCommand(sql, conn);
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                // read the data
-                while (rdr.Read())
+                try
                 {
-                    Employee employee = new();
-                    employee.Id = (int)rdr["EmployeeId"];
-                    employee.Code = (string)rdr["EmployeeCode"];
-                    employee.FirstName = (string)rdr["FirstName"];
-                    employee.LastName = (string)rdr["LastName"];
-                    employee.MiddleName = (string)rdr["MiddleName"];
-                    employee.Phone = (string)rdr["Phone"];
-                    employee.Email = (string)rdr["Email"];
-                    employee.DateJoined = (DateTime)rdr["DateJoined"];
-                    employees.Add(employee);
+                    // SQL Query to execute
+                    // selecting only first 10 rows for demo
+                    string sql = "SELECT * FROM employees;";
+                    MySqlCommand cmd = new MySqlCommand(sql, conn);
+                    conn.Open();
+                    MySqlDataReader rdr = cmd.ExecuteReader();
+                    // read the data
+                    while (rdr.Read())
+                    {
+                        Employee employee = new();
+                        employee.Id = (int)rdr["EmployeeId"];
+                        employee.Code = (string)rdr["EmployeeCode"];
+                        employee.FirstName = (string)rdr["FirstName"];
+                        employee.LastName = (string)rdr["LastName"];
+                        employee.MiddleName = (string)rdr["MiddleName"];
+                        employee.Phone = (string)rdr["Phone"];
+                        employee.Email = (string)rdr["Email"];
+                        employee.DateJoined = (DateTime)rdr["DateJoined"];
+                        employees.Add(employee);
+                    }
                 }
-                rdr.Close();
+                catch (Exception err)
+                {
+                    Console.WriteLine(err.ToString());
+                }
+
+                return employees;
             }
-            catch (Exception err)
-            {
-                Console.WriteLine(err.ToString());
-            }
-            conn.Close();
-            return employees;
+
         }
         public Employee GetByCode(string code)
         {
@@ -59,7 +58,7 @@ namespace SimpleEmployeeApp.Repository
 
             Employee employee = new();
 
-            try 
+            try
             {
                 conn.Open();
                 var sql = "SELECT * FROM employees where EmployeeCode = '" + code + "'";
@@ -77,8 +76,9 @@ namespace SimpleEmployeeApp.Repository
                     employee.MiddleName = (string)rdr["MiddleName"];
                     employee.Phone = (string)rdr["Phone"];
                     employee.Email = (string)rdr["Email"];
-                    employee.DateJoined = (DateTime)rdr["DateJoined"];
                     employee.Password = (string)rdr["EmployeePassword"];
+                    employee.DateJoined = (DateTime)rdr["DateJoined"];
+                    
                 }
             }
             catch (MySqlException ex)
@@ -95,7 +95,7 @@ namespace SimpleEmployeeApp.Repository
 
             Employee employee = null;
 
-            try 
+            try
             {
                 conn.Open();
                 var sql = "SELECT EmployeedId, EmployeeCode, FirstName, LastName, Phone FROM employees where EmployeeId = '" + id + "'";
@@ -126,12 +126,12 @@ namespace SimpleEmployeeApp.Repository
         {
             conn = new(connectionString);
 
-            try 
+            try
             {
                 Console.WriteLine("Connecting to MySql...");
                 conn.Open();
 
-                string query = "INSERT INTO employees(EmployeeCode, FirstName, LastName, MiddleName, Gender, EmployeeRole, Phone, Email, EmployeePassword, DateJoined) values('" + employee.Code + "', '" + employee.FirstName + "', '" + employee.LastName + "', '" + employee.MiddleName + "', '" + employee.Gender + "', '" + employee.Role + "', '" + employee.Phone + "', '" + employee.Email + "', '" + employee.Password + "', '" + employee.DateJoined.ToString("yyyy-MM-dd") + "');";
+                string query = "INSERT INTO employees(EmployeeCode, FirstName, LastName, MiddleName, Gender, Roles, Phone, Email, Password, DateJoined) values('" + employee.Code + "', '" + employee.FirstName + "', '" + employee.LastName + "', '" + employee.MiddleName + "', '" + employee.Gender + "', '" + employee.Role + "', '" + employee.Phone + "', '" + employee.Email + "', '" + employee.Password + "', '" + employee.DateJoined.ToString("yyyy-MM-dd") + "');";
 
                 MySqlCommand cmd = new MySqlCommand(query, conn);
 
@@ -180,7 +180,7 @@ namespace SimpleEmployeeApp.Repository
         public bool Delete(int id)
         {
             conn = new(connectionString);
-            
+
             try
             {
                 Console.WriteLine("Connecting to MySql...");

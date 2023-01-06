@@ -165,11 +165,13 @@ namespace SimpleEmployeeApp.Services
                 if (employee == null)
                 {
                     Console.WriteLine($"Employee with the id: {id} not found");
+                    return;
                 }
 
                 if (employee.Id == 1)
                 {
                     Console.WriteLine($"Record cannot be deleted!");
+                    return;
                 }
                 else
                 {
